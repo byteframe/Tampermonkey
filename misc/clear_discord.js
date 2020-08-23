@@ -4,7 +4,7 @@
 // Copy / paste the below script into the JavaScript console.
 // If you're in a DM you will receive a 403 error for every message the other user sent (you don't have permission to delete their messages).
 
-var before = '645771261435445248';
+var before = '699429264046686280';
 clearMessages = function(){
 	const authToken = document.body.appendChild(document.createElement`iframe`).contentWindow.localStorage.token.replace(/"/g, "");
 	const channel = window.location.href.split('/').pop();
