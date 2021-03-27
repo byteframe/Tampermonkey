@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Steam {SHARE}
 // @namespace    http://tampermonkey.net/
-// @version      0.0025
+// @version      0.0027
 // @description  shared and convenience functions
 // @author       byteframe
 // @match        *://steamcommunity.com/*
@@ -18,11 +18,14 @@
 // hide 'add showcase' in (own) profile pages
 jQuery(document).ready(function() {
   jQuery('.profile_customization.none_selected').hide();
+  jQuery('.profile_recentgame_header').hide();
+  jQuery('.recent_games').hide();
+  jQuery('.recentgame_quicklinks').parent().hide();
 
-  // changes upload form field values XXX
-  jQuery('form[action$=ugcupload] input[name=consumer_app_id').val('0');
-  jQuery('form[action$=ugcupload] input[name=title]').val('ㅤ');
+  // changes upload form field values
   jQuery('form[action$=ugcupload] input.inputTagsFilter[name!=tags\\[\\]]').prop('checked', true);
+  jQuery('form[action$=ugcupload] input[name=consumer_app_id]').attr('type', '');
+  jQuery('form[action$=ugcupload] input[name=file_type]').attr('type', '');
 });
 
 // override console logging function
@@ -270,7 +273,7 @@ unsafeWindow.request_app_data = function(callback) {
 // generate sam idling batch file
 unsafeWindow.print_sam_batch = function() {
   var counter = 0
-    , batch = 'cd "C:\\Program Files (x86)\\Steam\\steamapps\\SteamAchievementManager63_hotfix"';
+    , batch = 'D:\ncd "D:\\Software\\Windows\\SteamAchievementManager-7.0.25"';
   unplayed_apps.forEach(function(unplayed_app) {
     if ([280620,510540,531800,250740,520,584210,492840].indexOf(unplayed_app.appid) == -1) {
       batch += '\nREM ' + unplayed_app.name;
@@ -688,14 +691,14 @@ unsafeWindow.get_page = function(url, p = 1) {
 // find games with locked achievements from the all games page
 unsafeWindow.check_achievements = function() {
   var array = []
-    , batch = '\ncd "C:\\\\Program Files (x86)\\Steam\\steamapps\\SteamAchievementManager63_hotfix"';
-  jQuery('div.gameListRowItem').each(function(index, element) {
-    var name = jQuery(element).find('div.gameListRowItemName')[0].innerText;
-    jQuery(element).find('div.es_recentAchievements').each(function(index, element) {
+    , batch = 'D:\ncd "D:\\Software\\Windows\\SteamAchievementManager-7.0.25"';
+  jQuery('div.gameListRow').each(function(index, element1) {
+    var name = jQuery(element1).find('div.gameListRowItemName')[0].innerText;
+    jQuery(element1).find('div.es-achieveBar-gl').each(function(index, element) {
       var text = element.innerText.trim().replace(/[aA]chievements [eE]arned/, '');
       if (text !== '' && text.indexOf('0 of 0') == -1 && text.indexOf('100%') == -1) {
-        var result = text + " " + name + " | " + element.id.replace('es_app_', '');
-        array.push([result, element.id.replace('es_app_', '')]);
+        var result = text + " " + name + " | " + element1.id.replace('game_', '');
+        array.push([result, element1.id.replace('game_', '')]);
       }
     });
   });
