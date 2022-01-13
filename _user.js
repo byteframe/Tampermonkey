@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Steam {USER}
 // @namespace    http://tampermonkey.net/
-// @version      0.0025
+// @version      0.0026
 // @description  user-specific definitions
 // @author       byteframe
 // @match        *://steamcommunity.com/*
@@ -9,6 +9,29 @@
 // @grant        unsafeWindow
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js
 // ==/UserScript==
+
+// replace typed tokens with comment messages in message textareas
+found = -1;
+jQuery(document).keyup(function(event) {
+  if (event.which == 27) {
+    jQuery('textarea.commentthread_textarea, textarea#chatmessage').each(function(index, item) {
+      if (found == -1) {
+        var text = jQuery(item).val();
+        found = text.indexOf('$|');
+        if (found > -1) {
+          jQuery(item).val(text + "?");
+          request_data(function() {
+            comment_message(function(msg) {
+              found = -1;
+              jQuery(item).val(text.substr(0, found)+msg);
+              jQuery(item).click();
+            }, parseInt(text.substr(found+2,2)), text.substr(found+4));
+          });
+        }
+      }
+    });
+  }
+});
 
 // select element(s) from a pool object for end shuffling
 unsafeWindow.pool_elements = function(pool, length = 1, join = '') {
@@ -109,8 +132,8 @@ unsafeWindow.font = function(input, f) {
   }
   return output;
 };
-unsafeWindow.paste_key = 'ukshJKB1YzvftTxExfHNl8CXLrn9MAPsWY0PwKB9d';
-unsafeWindow.steam_key = '757B6328C2CF5760FFB7FBE5AD5A0EFD';
+
+// open websites per account
 unsafeWindow.accounts = [ '',
   '76561198050000229','76561198050098959','76561198050350517','76561198050511182',
   '76561198050499943','76561198050511528','76561198050511684','76561198050661239',
@@ -171,8 +194,27 @@ unsafeWindow.accounts = [ '',
   '76561198152664152','76561198152660551','76561198152698207','76561198152737908',
   '76561198152739622','76561198152734693','76561198152855390','76561198152682252',
 ];
-unsafeWindow.steamid_blacklist = [ '76561197976737508', '76561198078984631',
-  '76561198021841680', ];
+unsafeWindow.account = function(start, end = start, website = 'stm_com') {
+  if (website == 'stm_inv') {
+    website = 'http://steamcommunity.com/profiles/${account}/inventory/#753';
+  } else if (website == 'stm_com') {
+    website = 'http://steamcommunity.com/profiles/${account}';
+  } else if (website == 'tf2b') {
+    website = 'https://tf2b.com/tf2/${account}';
+  } else {
+    unsafeWindow.console_log('ERORR, unknown website: ' + website);
+  }
+  var count = 0;
+  for (var i = start; i <= end; i++) {
+    count++;
+    setTimeout(function(i) {
+      GM_openInTab(website.replace('${account}', accounts[i]));
+    }, count*200, i);
+  }
+};
+
+// profile
+unsafeWindow.steamid_blacklist = [ ];
 unsafeWindow.avatar_blacklist = [ '227940','51100', ];
 unsafeWindow.inventories = [];
 unsafeWindow.countries = [];

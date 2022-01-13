@@ -2,7 +2,7 @@
 // @name         SteamPowered/app/* (logo_link)
 // @namespace    http://tampermonkey.net/
 // @version      0.0026
-// @description  include small icon and link to ogg/avatars page in store fronts
+// @description  include small icon (blocked) and link to ogg/avatars page in store fronts
 // @author       byteframe
 // @match        *://store.steampowered.com/app/*
 // @grant        GM_xmlhttpRequest
