@@ -193,7 +193,7 @@ unsafeWindow.request_app_data = function(callback) {
 // generate sam idling batch file
 unsafeWindow.print_sam_batch = function() {
   var counter = 0
-    , batch = 'C:\ncd "C:\Program Files (x86)\Steam\steamapps\SteamAchievementManager-7.0.25"';
+    , batch = 'C:\ncd "C:\\Users\\byteframe\\Downloads\\SteamAchievementManager-7.0.25"';
   unplayed_apps.forEach(function(unplayed_app) {
     if ([280620,510540,531800,250740,520,584210,492840].indexOf(unplayed_app.appid) == -1) {
       batch += '\nREM ' + unplayed_app.name;
