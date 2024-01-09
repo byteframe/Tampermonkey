@@ -586,7 +586,7 @@ unsafeWindow.get_page = function(url, p = 1) {
 };
 
 // find games with locked achievements from the all games page
-unsafeWindow.check_achievements = function() {
+unsafeWindow.check_achievements_old = function() {
   var array = []
     , batch = 'C:\ncd "C:\Program Files (x86)\Steam\steamapps\SteamAchievementManager-7.0.25"';
   jQuery('div.gameListRow').each(function(index, element1) {
@@ -605,6 +605,21 @@ unsafeWindow.check_achievements = function() {
     }
     batch += '\nrem ' + appid[0];
     batch += '\nstart SAM.Game.exe ' + appid[1];
+  });
+  console.log(batch);
+};
+unsafeWindow.check_achievements = function(batch = 'C:\ncd "C:\\Users\\byteframe\\Downloads\\SteamAchievementManager-7.0.25"', index = 0) {
+  jQuery("div[class^='gameslistitems_GamesListItemContainer_']").each(function(i, element1) {
+    var name = element1.innerText.replace(/\n.*/s, '');
+    var achs = jQuery(element1).find('.gameslistitems_AchievementContainer_38RhR')[0].innerText.replace(/ACHIEVEMENTS\n/s, '').trim();
+    var appi = jQuery(element1).find('a')[0].href.replace(/.*[/]/, '');
+    if (achs != '' && achs.split('/')[0] != achs.split('/')[1]) {
+      if (index !== 0 && index % 20 === 0) {
+        batch += '\ntimeout /t 27000';
+      }
+      batch += '\nrem ' + name + '\nstart SAM.Game.exe ' + appi;
+      index++;
+    }
   });
   console.log(batch);
 };
