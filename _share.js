@@ -22,11 +22,40 @@ jQuery(document).ready(function() {
   jQuery('.recent_games').hide();
   jQuery('.recentgame_quicklinks').parent().hide();
 
+  // change comment report button to clipboard copy and transform
+  jQuery("a.pagebtn").on("click", function() {
+    setTimeout(change_report_links, 2500);
+  });
+  change_report_links();
+
   // changes upload form field values
   jQuery('form[action$=ugcupload] input.inputTagsFilter[name!=tags\\[\\]]').prop('checked', true);
   jQuery('form[action$=ugcupload] input[name=consumer_app_id]').attr('type', '');
   jQuery('form[action$=ugcupload] input[name=file_type]').attr('type', '');
+
+  // spoof/hide account info
+  jQuery('.market_dialog_row').hide();
+  jQuery('.account_name').text('gaben@valvesoftware.com');
+  jQuery('.cached_payment_method_description').hide();
+  jQuery('.youraccount_pageheader').hide();
+  jQuery('.account_data_field').hide();
+  jQuery('.addfunds_pageheader').text("Add funds to gaben@valvesoftware.com's Wallet");
+  date = new Date();
+  jQuery('#header_wallet_balance').text("$14" + "," + date.getDay() + Math.max(9, date.getMonth()) + (""+date.getMinutes())[0] + "." + (Math.max(20, date.getMonth() * 2) - Math.floor(Math.random() * (8 - 1 + 1))));
+  jQuery('.accountData').text("$14" + "," + date.getDay() + Math.max(9, date.getMonth()) + (""+date.getMinutes())[0] + "." + (Math.max(20, date.getMonth() * 2) - Math.floor(Math.random() * (8 - 1 + 1))));
 });
+if (document.URL.includes('https://store.steampowered.com/account/')) {
+  $(document).prop('title', 'byteframe@papajohns.com');
+}
+
+// transform comment and copy to navigator clipboard
+unsafeWindow.change_report_links = () => (
+  jQuery('div.commentthread_comment_content').each((i, e) =>
+    jQuery(e).find('a.report_and_hide').attr('onclick', 'copy_comment(`' + e.children[1].innerHTML + '`);')))
+unsafeWindow.copy_comment = function(m) {
+  m = m .replace(/<[/]?div.*?>/g, '').replace(/<img src="https:\/\/community\.(akamai|cloudflare)\.steamstatic\.com\/economy\/emoticon\/.*?" alt=\"/g, '').replace(/" class="emoticon">/g, '').replace(/<br>/g, '\n').replace(/:/g, 'ː');
+  navigator.clipboard.writeText("[list][*][quote]" + m + "[/quote][/list]");
+};
 
 // override console logging function
 unsafeWindow.console_log = console.log;
@@ -586,7 +615,7 @@ unsafeWindow.get_page = function(url, p = 1) {
 };
 
 // find games with locked achievements from the all games page
-unsafeWindow.check_achievements_old = function() {
+unsafeWindow.check_achievements1 = function() {
   var array = []
     , batch = 'C:\ncd "C:\Program Files (x86)\Steam\steamapps\SteamAchievementManager-7.0.25"';
   jQuery('div.gameListRow').each(function(index, element1) {
@@ -601,24 +630,42 @@ unsafeWindow.check_achievements_old = function() {
   });
   array.forEach(function(appid, index) {
     if (index !== 0 && index % 20 === 0) {
-      batch += '\ntimeout /t 27000';
+      batch += '\ntimeout /t 10000';
     }
     batch += '\nrem ' + appid[0];
     batch += '\nstart SAM.Game.exe ' + appid[1];
   });
   console.log(batch);
 };
-unsafeWindow.check_achievements = function(batch = 'C:\ncd "C:\\Users\\byteframe\\Downloads\\SteamAchievementManager-7.0.25"', index = 0) {
+unsafeWindow.check_achievements2 = function(batch = 'C:\ncd "C:\\Users\\byteframe\\Downloads\\SteamAchievementManager-7.0.25"', index = 0) {
   jQuery("div[class^='gameslistitems_GamesListItemContainer_']").each(function(i, element1) {
     var name = element1.innerText.replace(/\n.*/s, '');
-    var achs = jQuery(element1).find('.gameslistitems_AchievementContainer_38RhR')[0].innerText.replace(/ACHIEVEMENTS\n/s, '').trim();
+    var achs = jQuery(element1).find('.gameslistitems_AchievementContainer_38RhR')[0].innerText.replace(/ACHIEVEMENTS/s, '').trim();
     var appi = jQuery(element1).find('a')[0].href.replace(/.*[/]/, '');
     if (achs != '' && achs.split('/')[0] != achs.split('/')[1]) {
       if (index !== 0 && index % 20 === 0) {
-        batch += '\ntimeout /t 27000';
+        batch += '\ntimeout /t 20000';
       }
       batch += '\nrem ' + name + '\nstart SAM.Game.exe ' + appi;
       index++;
+    }
+  });
+  console.log(batch);
+};
+unsafeWindow.check_achievements = function() {
+  var index = 0, batch = 'C:\ncd "C:\\Users\\byteframe\\Downloads\\SteamAchievementManager-7.0.25"';
+  jQuery('div[class^=_]:has(a[href$=achievements])').each(function(i, element1) {
+    if (i > 2 && i % 2 == 0) {
+      var name = element1.innerText.replace(/\n.*/s, '');
+      var appi = jQuery(element1).find('a')[0].href.match(/\d+/)[0];
+      var achs = element1.innerText.match(/ACHIEVEMENTS\n[0-9]+[\/][0-9]+/)[0].slice(13);
+      if (!name.match(/(TOTAL PLAYED|ACHIEVEMENTS)/) && achs != '' && achs.split('/')[0] != achs.split('/')[1]) {
+        if (index !== 0 && index % 20 === 0) {
+          batch += '\ntimeout /t 30000';
+        }
+        batch += '\nrem ' + name + '\nstart SAM.Game.exe ' + appi;
+        index++;
+      }
     }
   });
   console.log(batch);
