@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Steam {SHARE}
 // @namespace    http://tampermonkey.net/
-// @version      0.0027
+// @version      0.0028
 // @description  shared and convenience functions (unused except ready,page_scroll,check_achievements
 // @author       byteframe
 // @match        *://steamcommunity.com/*
@@ -17,16 +17,21 @@
 
 // hide 'add showcase' in (own) profile pages
 jQuery(document).ready(function() {
-  jQuery('.profile_customization.none_selected').hide();
-  jQuery('.profile_recentgame_header').hide();
-  jQuery('.recent_games').hide();
-  jQuery('.recentgame_quicklinks').parent().hide();
+  document.URL == 'https://steamcommunity.com/id/byteframe/' && (
+    jQuery('.profile_customization.none_selected').hide(),
+    jQuery('.profile_recentgame_header').hide(),
+    jQuery('.recent_games').hide(),
+    jQuery('.recentgame_quicklinks').parent().hide()),
 
   // change comment report button to clipboard copy and transform
   jQuery("a.pagebtn").on("click", function() {
     setTimeout(change_report_links, 2500);
   });
   change_report_links();
+
+  // remove following button for previous users
+  unsafeWindow.g_rgProfileData && unsafeWindow.followees.includes(unsafeWindow.g_rgProfileData.steamid) && 
+    jQuery('a.follow_button').hide();
 
   // changes upload form field values
   jQuery('form[action$=ugcupload] input.inputTagsFilter[name!=tags\\[\\]]').prop('checked', true);
@@ -43,6 +48,13 @@ jQuery(document).ready(function() {
   date = new Date();
   jQuery('#header_wallet_balance').text("$14" + "," + date.getDay() + Math.max(9, date.getMonth()) + (""+date.getMinutes())[0] + "." + (Math.max(20, date.getMonth() * 2) - Math.floor(Math.random() * (8 - 1 + 1))));
   jQuery('.accountData').text("$14" + "," + date.getDay() + Math.max(9, date.getMonth()) + (""+date.getMinutes())[0] + "." + (Math.max(20, date.getMonth() * 2) - Math.floor(Math.random() * (8 - 1 + 1))));
+  
+  // hide subsumed from favoriting
+  if (document.URL.startsWith('https://steamcommunity.com/sharedfiles/filedetails/?id=')) {
+    if (subsumed.includes(document.URL.match(/\d+/)[0])) {
+      jQuery('span#FavoriteItemBtn').hide();
+    }
+  }
 });
 if (document.URL.includes('https://store.steampowered.com/account/')) {
   $(document).prop('title', 'byteframe@papajohns.com');
@@ -680,4 +692,24 @@ unsafeWindow.check_games = function() {
       }
     });
   });
+};
+
+// open websites per account
+unsafeWindow.account = function(start, end = start, website = 'stm_com') {
+  if (website == 'stm_inv') {
+    website = 'http://steamcommunity.com/profiles/${account}/inventory/#753';
+  } else if (website == 'stm_com') {
+    website = 'http://steamcommunity.com/profiles/${account}';
+  } else if (website == 'tf2b') {
+    website = 'https://tf2b.com/tf2/${account}';
+  } else {
+    unsafeWindow.console_log('ERORR, unknown website: ' + website);
+  }
+  var count = 0;
+  for (var i = start; i <= end; i++) {
+    count++;
+    setTimeout(function(i) {
+      GM_openInTab(website.replace('${account}', accounts[i]));
+    }, count*1000, i);
+  }
 };
