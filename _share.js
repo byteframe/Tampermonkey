@@ -17,11 +17,10 @@
 
 // hide 'add showcase' in (own) profile pages
 jQuery(document).ready(function() {
-  document.URL == 'https://steamcommunity.com/id/byteframe/' && (
+  document.URL.startsWith('https://steamcommunity.com/id/byteframe') && (
     jQuery('.profile_customization.none_selected').hide(),
     jQuery('.profile_recentgame_header').hide(),
-    jQuery('.recent_games').hide(),
-    jQuery('.recentgame_quicklinks').parent().hide()),
+    jQuery('div.profile_customization').has('div.recent_games')[0].hide()),
 
   // change comment report button to clipboard copy and transform
   jQuery("a.pagebtn").on("click", function() {
@@ -577,14 +576,14 @@ var download_count = 0;
 unsafeWindow.get_page = function(url, p = 1) {
   jQuery.get(url.replace(/\?.*/, '') + '/?p=' + p + '&appid=0&sort=newestfirst'
   ).fail(function() {
-    get_page(p);
+    get_page(url, p);
   }).done(function(response) {
     var publishedfileids = jQuery(response).find('a[href*=filedetails]');
     if (publishedfileids.length) {
       unsafeWindow.console_log('page: ' + p);
       (function get_file(f = 0) {
         if (f == publishedfileids.length) {
-          get_page(p+1);
+          get_page(url, p+1);
         } else {
           jQuery.get(publishedfileids[f].href
           ).fail(function() {
@@ -614,8 +613,7 @@ unsafeWindow.get_page = function(url, p = 1) {
               date + '_' + size + text;
             unsafeWindow.console_log(download);
             download_count++;
-            GM_download(jQuery(response).find("div.actualmediactn a")[0].href,
-              download + ".jpg");
+            GM_download(jQuery(response).find("div.actualmediactn a")[0].href, download + ".jpg");
             setTimeout(get_file, 1000, f+1);
           });
         }
