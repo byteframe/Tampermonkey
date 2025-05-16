@@ -10,6 +10,39 @@
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js
 // ==/UserScript==
 
+// find proper ogg avatar urls
+var array = avatars.pool
+  , found = {}
+  , new_avatars = [];
+find_avatar_url = (index = 0) => {
+  if (index == array.length) {
+    return console.log('done');
+  }
+  if (array[index][0] in found) {
+    new_avatars.push([found[''+array[index][0]], array[index][1]]);
+    console.log('found: ' + array[index][0] + "/" + array[index][1]);
+    find_avatar_url(index+1);
+  } else {
+    jQuery.get('//steamcommunity.com/ogg/' + array[index][0] + '/Avatar/List'
+    ).fail(function() {
+      console.log('FAIL, request_avatar_url: ' + avatar[0]);
+      setTimeout(find_avatar_url, 3000, index);
+    }).done(function(data) {
+      var url = '';
+      try {
+        url = jQuery(data).find('p.returnLink a')[0].href.substr(33);
+      } catch (e) {
+        console.log(e);
+        return setTimeout(find_avatar_url, 3000, index);
+      }
+      found[''+array[index][0]] = url;
+      new_avatars.push([url, array[index][1]]);
+      console.log('new: ' + url + "/" + array[index][1]);
+      setTimeout(find_avatar_url, 3000, index+1);
+    });
+  }
+};
+
 // replace typed tokens with comment messages in message textareas
 found = -1;
 jQuery(document).keyup(function(event) {

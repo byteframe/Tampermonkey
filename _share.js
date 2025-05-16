@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Steam {SHARE}
 // @namespace    http://tampermonkey.net/
-// @version      0.0028
+// @version      0.0029
 // @description  shared and convenience functions (unused except ready,page_scroll,check_achievements
 // @author       byteframe
 // @match        *://steamcommunity.com/*
@@ -22,11 +22,35 @@ jQuery(document).ready(function() {
     jQuery('.profile_recentgame_header').hide(),
     jQuery('div.profile_customization').has('div.recent_games')[0].hide()),
 
+  // mark workshops with favorited items in the global landing page and wrap the divs in links
+  unsafeWindow.change_workshop_links = () =>
+    setTimeout(() =>
+      jQuery('div.app').toArray().forEach((e, i, E, g = e.innerHTML.match(/apps\/\d+/)[0].match(/\d+/)[0]) => (
+        e.innerHTML.match(/apps\/\d+/) && (
+          jQuery(e).wrapAll('<a href="https://steamcommunity.com/app/' + g + '/workshop/"></a>'),
+          (unsafeWindow.favorited_workshops.includes(g) || unsafeWindow.subscribed_workshops.includes(g)) && jQuery(e).css('background-color', '#FF0000'))
+    )), 1000),
+  document.URL.startsWith('https://steamcommunity.com/workshop/') && (
+    jQuery.get('https://steamcommunity.com/id/byteframe/myworkshopfiles/?appid=0&sort=score&browsefilter=myfavorites&view=imagewall').done(b => (
+      unsafeWindow.favorited_workshops = b.match(/'appid': '\d+'/g).map(e => e.match(/\d+/)[0]))),
+    jQuery.get('https://steamcommunity.com/id/byteframe/myworkshopfiles/?appid=0&sort=score&browsefilter=mysubscriptions&view=imagewall').done(b => (
+      unsafeWindow.subscribed_workshops = b.match(/'appid': '\d+'/g).map(e => e.match(/\d+/)[0]))),
+    setTimeout(change_workshop_links, 1000),
+    jQuery('#workshop_apps_ctn').on('click', change_workshop_links)),
+
+  // transform comment and copy to navigator clipboard
+  unsafeWindow.change_report_links = () =>
+    jQuery('div.commentthread_comment_content').each((i, e) =>
+      jQuery(e).find('a.report_and_hide').attr('onclick', 'copy_comment(`' + e.children[1].innerHTML + '`);')),
+  unsafeWindow.copy_comment = function(m) {
+    m = m .replace(/<[/]?div.*?>/g, '').replace(/<img src="https:\/\/community\.(akamai|cloudflare)\.steamstatic\.com\/economy\/emoticon\/.*?" alt=\"/g, '').replace(/" class="emoticon">/g, '').replace(/<br>/g, '\n').replace(/:/g, 'ː');
+    navigator.clipboard.writeText("[list][*][quote]" + m + "[/quote][/list]");
+  };
+
   // change comment report button to clipboard copy and transform
-  jQuery("a.pagebtn").on("click", function() {
-    setTimeout(change_report_links, 2500);
-  });
-  change_report_links();
+  jQuery("a.pagebtn").on("click", () =>
+    setTimeout(change_report_links, 2500)),
+  change_report_links(),
 
   // remove following button for previous users
   unsafeWindow.g_rgProfileData && unsafeWindow.followees.includes(unsafeWindow.g_rgProfileData.steamid) && 
@@ -59,38 +83,25 @@ if (document.URL.includes('https://store.steampowered.com/account/')) {
   $(document).prop('title', 'byteframe@papajohns.com');
 }
 
-// transform comment and copy to navigator clipboard
-unsafeWindow.change_report_links = () => (
-  jQuery('div.commentthread_comment_content').each((i, e) =>
-    jQuery(e).find('a.report_and_hide').attr('onclick', 'copy_comment(`' + e.children[1].innerHTML + '`);')))
-unsafeWindow.copy_comment = function(m) {
-  m = m .replace(/<[/]?div.*?>/g, '').replace(/<img src="https:\/\/community\.(akamai|cloudflare)\.steamstatic\.com\/economy\/emoticon\/.*?" alt=\"/g, '').replace(/" class="emoticon">/g, '').replace(/<br>/g, '\n').replace(/:/g, 'ː');
-  navigator.clipboard.writeText("[list][*][quote]" + m + "[/quote][/list]");
-};
-
 // override console logging function
 unsafeWindow.console_log = console.log;
 
 // scroll down the page
-unsafeWindow.page_scroll = function(p, t) {
-  window.scrollBy(0, p);
-  setTimeout(page_scroll, t, p, t);
-};
+unsafeWindow.page_scroll = (p, t) => (
+  window.scrollBy(0, p),
+  setTimeout(page_scroll, t, p, t)),
 
 // get url
-unsafeWindow.get_url = function() {
-  return jQuery("#global_actions").find(".playerAvatar")[0].href;
-};
+unsafeWindow.get_url = () =>
+  jQuery("#global_actions").find(".playerAvatar")[0].href
 
 // pad value
-unsafeWindow.pad = function(i) {
-  return (i < 10) ? "0" + i : "" + i;
-};
+unsafeWindow.pad = (i) =>
+  i < 10 ? "0" + i : "" + i
 
 // translate community id to steamid
-unsafeWindow.translate_id = function(cid) {
-  return '765' + (parseInt(cid) + 61197960265728);
-};
+unsafeWindow.translate_id = (cid) =>
+  '765' + (parseInt(cid) + 61197960265728)
 
 // comment message selection/callback
 unsafeWindow.comment_message = function(callback, type = -1, args = '') {
